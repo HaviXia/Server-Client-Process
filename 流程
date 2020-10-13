@@ -1,0 +1,141 @@
+
+
+海量用户即时通讯系统
+
+    需求分析 设计阶段 编码实现 测试阶段 实施
+
+
+        需求分析
+            1。用户注册
+            2。用户登录
+            3。显示在线用户列表
+            4。群聊（广播）
+            5。点对点聊天
+            6。离线留言
+
+
+        项目开发前的技术准备
+            在golang中如何使用 redis 存储用户的信息
+
+
+
+
+
+1。实现：显示客户端登陆菜单（两级菜单，登陆成功之后，显示第二级菜单）
+
+
+ 多人聊天室的一个结构分析：
+
+
+        服务器：
+
+        服务器接收客户端传来的用户Id、Pwd，并且比较是否正确，返回结果（协程解决）
+
+        客户端：
+
+        接收用户输入的Id和Pwd
+        发送Id和Pwd给服务器
+        接收服务器返回的结果
+        判断成功失败。并且显示对应的页面
+
+ 关键的问题，怎么组织发送的数据？？？
+
+    重点：
+            发送数据的流程
+                    Message struct{
+                        Type string //消息类型
+                        Data string // 消息的内容
+                    }
+            1。先创建一个 Message 结构体，
+            2。mes.Type = 登陆类型
+            3。将登陆的信息（userId、userPwd）序列化之后存入Message.Data，再对 Message结构体 再次序列化
+            4。在网络传输中，最麻烦的就是丢包问题
+                1） http包多长？对方收到的这个长度是否和发送的这个长度一致？
+                给服务器发送 Message 的长度，再发送消息体的本身，服务器收到这两个数据，比对
+
+          服务器接收数据的流程
+                    LoginResMes{
+                        code int // http协议 500、403、200的错误
+                        err string // 返回错误的 string
+                    }
+            1。接收到客户端发送来的长度数据（把[]byte转换成int）
+            2。先接收到数据长度 len ，之后再接收数据本身，判断长度是否合规
+            3。判断是否丢包
+            4。没有丢包，反序列化 Message.Data
+            5。取出 Message.Data （string） 再次进行反序列化
+            6。取出 login.UserId和UserPwd，在数据库里比较
+            7。根据比较结果返回比较结果
+            8。将比较的结果返回给客户端
+
+
+
+            可以适当添加 --纠错协议--
+
+
+
+    第一步：登录功能，服务器和客户端通信
+
+    第二步，客户端发送消息本身，服务器端正常接收到消息，并根据客户端发送的消息LoginMes判断用户的合法性，并返回响应的LoginResMes；
+            服务端接收到消息，反序列化成对应的消息结构体
+            服务器端根据反序列化成对应的消息，判断是否登录用户合法，返回LoginResMes
+            客户端解析返回的 LoginResMes，显示对应界面
+
+            完成登陆并提示相应的信息
+
+
+
+     程序结构的改进，改进服务端，画出程序框架图。
+
+            服务器端的程序框架
+
+                    main.go (连接、监听、启动process协程) ---> 改进 main（监听程序、等待客户端的连接、完成初始化工作,调用 processor.go 方法完成调度）
+
+                    main.go --发送请求--> 交给 processor.go（处理器） 根据客户端的请求，调用不同的具体对应的控制器完成响应任务
+
+
+                   processor.go   --   userProcess.go 处理用户的请求(登陆、注册、注销) / smsProcess.go(处理和短消息相关的请求、群聊、点对点的聊天)
+
+
+            工具类 Utils.go （把一些常用的工具函数、结构体 抽取出来） 提供常用的方法和函数，不同的处理过程需要调用这个工具的时候，直接可以调用
+            common/message  共用的文件
+
+
+                       从一个大程序中抽取小程序的步骤：
+
+
+            改进服务端
+                        processor.go 总控一般都只记录在 服务器端
+
+                                    1 先将分析出的文件.go 创建好（可以为空），放到相应的文件夹中(包)。
+                                        创建 server/main、server/model、server/utils、server/process
+
+                                        把 main.go 移动到 main 包下,创建 smsProcess、userProcess、server/main/processor.go
+                                        创建 utils/utils.go 、
+
+                                    2 根据各个文件完成的任务不同，将main.go代码 剥离，到对应的文件中。
+
+                                    3 修改代码的时候，从底层（被调用次数最多的包/函数）开始修改
+
+                       剥离步骤，修改 utils/utils.go =====》 修改 userProcess.go/smsProcess.go   =====》 剥离 processor.go
+
+
+            程序结构的改进，改进客户端
+
+                              main.go（1。显示第一级菜单 2。根据用户的输入去调用对应的 Process）
+
+                    main.go ---->  smsProcess.go  /  userProcess.go  ---->
+
+                    smsProcess.go 处理和短信相关的逻辑、私聊、群发
+                    userProcess.go  处理和用户相关的业务、登陆、注册等
+
+                    server.go  1。显示登陆成功的界面  2。保持和服务端的通讯【启动协程】 3。当读取到服务器端发送的消息后，会显示在界面上
+
+
+                    把文件放到对应的文件夹下：
+                            将server/utils.go 拷贝为 client/utils/utils.go
+                            创建 server/process/userProcess.go(登陆)
+                            创建了 server/process/server.go
+
+
+
+            下一次优化，在redis里验证用户名和密码是否正确
