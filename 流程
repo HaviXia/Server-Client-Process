@@ -197,5 +197,10 @@
 
                 在redis中模拟假如一个用户的信息 : hset users 100 "{\"userId\":100,\"userPwd\":\"123456\",\"userName\":\"scott\"}"
 
+            1。编写 model/user.go
+
+            2。编写 model/erro.go
+
+            3。编写model/userDao.go
 
 

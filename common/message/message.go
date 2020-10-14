@@ -22,10 +22,12 @@ type LoginMes struct {
 type LoginResMes struct {
 	Code int `json:"code"` //错误的代码
 	/*
-		Code = 500 表示用户还未注册
+		Code = 500 表示用户还未注册，不存在
+		Code = 403 表示用户密码不正确
+		Code = 505 未知错误/服务器内部错误
 		Code = 200 表示登陆成功
 	*/
-	Err error `json:"err"` //登陆时返回的错误信息
+	Error string `json:"err"` //登陆时返回的错误信息
 }
 
 //注册对应的结构体

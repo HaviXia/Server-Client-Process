@@ -110,7 +110,7 @@ func (this *UserProcess) Login(userId int, userPwd string) (err error) { // 返�
 
 	mes, err = transfer.ReadPkg()
 	if err != nil {
-		fmt.Println("client login readPkg() err", err)
+		//	fmt.Println("client login readPkg() err", err)
 		return
 	}
 	//反序列化 mes 的 Data,编程 LoginResMes
@@ -135,9 +135,8 @@ func (this *UserProcess) Login(userId int, userPwd string) (err error) { // 返�
 		for {
 			ShowMenu()
 		}
-	} else if loginResMes.Code == 500 {
-		fmt.Println(loginResMes.Err)
-		fmt.Println("用户不存在请注册后登陆")
+	} else {
+		fmt.Println(loginResMes.Error)
 	}
 	return
 }

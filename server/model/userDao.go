@@ -63,7 +63,7 @@ func (this *UserDao) getUserById(conn redis.Conn, id int) (user *User, err error
 	// 得到的 res 是一个序列化之后的内容 "{/"/..../"}"
 	// 需要将 res 进行反序列化，得到 User 实例 ，这样才能得到对应的 Id 和 Pwd
 	user = &User{}
-	err = json.Unmarshal([]byte(res), &user)
+	err = json.Unmarshal([]byte(res), user)
 	if err != nil {
 		fmt.Println("json Unmarshal err:", err)
 		return
@@ -87,6 +87,7 @@ func (this *UserDao) Login(userId int, userPwd string) (user *User, err error) {
 	user, err = this.getUserById(conn, userId) //返回值已经定义名称，使用 = 而不是 :=
 	if err != nil {
 		//可能是用户不存在，也可能是 Unmarshak
+		return
 	}
 
 	//没有错误，用户的 id 是存在的，并且获取到了

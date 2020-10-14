@@ -54,7 +54,7 @@ func (this *Transfer) ReadPkg() (mes message.Message, err error) {
 	//如果客户端关闭了 conn，就不会被阻塞
 	//那么 服务端就会一直error 不断的 read pkg head err
 	if err != nil {
-		fmt.Println("conn.Read failed ,err:", err) //err EOF
+		//fmt.Println("conn.Read failed ,err:", err) //err EOF
 		//errors.New("read pkg head error")
 		return
 	}

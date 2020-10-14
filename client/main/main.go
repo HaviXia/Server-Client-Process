@@ -46,7 +46,7 @@ func main() {
 			up := &process.UserProcess{}
 			err := up.Login(userId, userPwd)
 			if err != nil {
-				fmt.Println("用户登录失败！", err)
+				//fmt.Println("用户登录失败！", err)
 				return
 			}
 
