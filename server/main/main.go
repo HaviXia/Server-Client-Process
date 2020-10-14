@@ -1,11 +1,17 @@
 package main
 
 import (
+	"DailyGolang/sxt17_socket/tcp用户即时通信/server/model"
 	"fmt"
 	"net"
+	"time"
 )
 
 func main() {
+
+	initPool("localhost:6379", 16, 0, 300*time.Second)
+	//注意调用顺序的问题
+	initUserDao()
 	fmt.Println("系统实现了结构分层之后的DEMO～")
 	fmt.Println("服务器在 8889 端口监听.......")
 	listen, err := net.Listen("tcp", "0.0.0.0:8889")
@@ -78,6 +84,16 @@ func process(conn net.Conn) {
 	//	}
 	//}
 
+}
+
+/*
+	编写函数，实现对 UserDao 的初始化工作
+*/
+
+// 这里需要注意一个初始化调用的顺序问题：需要西优先调用 initPool 再调用 initUserDao ，因为 initUserDao 要依赖于 pool
+func initUserDao() {
+	// pool 定义在 redis.go 中，本身就是一个 全局的变量
+	model.MyUserDao = model.NewUserDao(pool)
 }
 
 //第二步，定义的一个新的函数

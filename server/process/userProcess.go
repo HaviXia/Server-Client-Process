@@ -2,6 +2,8 @@ package process
 
 import (
 	"DailyGolang/sxt17_socket/tcp用户即时通信/common/message"
+	"DailyGolang/sxt17_socket/tcp用户即时通信/server/model"
+
 	/*
 		导入外部的包的时候，不要把外部的包 定义为 package main
 
@@ -9,7 +11,6 @@ import (
 	*/
 	"DailyGolang/sxt17_socket/tcp用户即时通信/server/utils"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 )
@@ -39,15 +40,33 @@ func (this *UserProcess) ServerProcessLogin(mes *message.Message) (err error) {
 	//声明一个 LoginResMes,完成赋值
 	var loginResMes message.LoginResMes
 
-	// ID = 100 , Pwd = 123456 登陆成功
-	if loginMes.UserId == 100 && loginMes.UserPwd == "123456" {
-		//成功
-		loginResMes.Code = 200
-		//fmt.Println("登陆成功")
-	} else {
+	// 去 redis 验证
+	// 在 main 中 实例化了 model.MyUserDao, 使用 model.MyUserDao 去 redis 中进行验证
+	user, err := model.MyUserDao.Login(loginMes.UserId, loginMes.UserPwd)
+	// 得到的这个 user 非常重要，为了服务器为了拿到用户的各种信息，这个user中包含了id、pwd、name等各种信息
+	fmt.Printf("user = %v\n", user)
+
+	if err != nil {
+
 		loginResMes.Code = 500
-		loginResMes.Err = errors.New("用户登录失败，账号或密码错误")
+		// 可以根据具体的错误信息，返回具体的错误信息
+
+	} else {
+		loginResMes.Code = 200
+		fmt.Printf("user:%d登陆成功~", loginMes.UserId)
 	}
+
+	// ID = 100 , Pwd = 123456 登陆成功
+	// 定义了 userDao 现在就要修改原来的验证方式
+	//if loginMes.UserId == 100 && loginMes.UserPwd == "123456" {
+	//	//成功
+	//	loginResMes.Code = 200
+	//	//fmt.Println("登陆成功")
+	//} else {
+	//	loginResMes.Code = 500
+	//	loginResMes.Err = errors.New("用户登录失败，账号或密码错误")
+	//}
+
 	//将 loginResMes 序列化
 	data, err := json.Marshal(loginResMes)
 	if err != nil {

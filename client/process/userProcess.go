@@ -94,6 +94,8 @@ func (this *UserProcess) Login(userId int, userPwd string) (err error) { // 返�
 
 	//客户端发送消息本身给服务端
 	_, err = conn.Write(mesData)
+
+	//
 	if err != nil {
 		fmt.Println("conn.Write(mesData) err", err)
 		return
