@@ -13,7 +13,6 @@ import (
 */
 var (
 	MyUserDao *UserDao
-	users     = "users"
 )
 
 /*
@@ -109,6 +108,7 @@ func (this *UserDao) Register(user *message.User) (err error) {
 	user, err = this.getUserById(conn, user.UserId) //返回值已经定义名称，使用 = 而不是 :=
 	if err == nil {
 		err = ERROR_USER_EXISTS // 如果不出错，则返回用户Id已经存在
+		return
 	}
 
 	// 说明这个 redis 中没有存 这个用户的 id 和 pwd ，可以完成注册
@@ -119,7 +119,8 @@ func (this *UserDao) Register(user *message.User) (err error) {
 	}
 
 	// 添加到 redis , 得到的 data 是一个 []byte 要转换成 string
-	_, err = redis.String(conn.Do("HSet", users, user.UserId, string(data))) //users 是全局的常量
+	_, err = conn.Do("HSet", "users", user.UserId, string(data)) //users 是全局的常量
+
 	if err != nil {
 		fmt.Println("保存注册用户错误")
 		return

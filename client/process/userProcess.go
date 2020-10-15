@@ -41,7 +41,7 @@ func (this *UserProcess) Login(userId int, userPwd string) (err error) { // 返�
 	//4。将 loginMes 序列化
 	marshal, err := json.Marshal(loginMes) // marshal是一个切片 []byte
 	if err != nil {
-		panic(err)
+
 		fmt.Println("loginMes 序列化错误")
 		return
 	}
@@ -52,7 +52,7 @@ func (this *UserProcess) Login(userId int, userPwd string) (err error) { // 返�
 	//将 mes 进行序列化
 	mesData, err := json.Marshal(mes)
 	if err != nil {
-		panic(err)
+
 		fmt.Println("loginM es序列化错误")
 		return
 	}
@@ -85,7 +85,7 @@ func (this *UserProcess) Login(userId int, userPwd string) (err error) { // 返�
 	n, err := conn.Write(buf[:4])
 
 	if err != nil {
-		panic(err)
+
 		fmt.Println("conn.Write 失败！", err)
 		return
 	}
@@ -153,7 +153,7 @@ func (this *UserProcess) Register(userId int, userPwd, userName string) (err err
 	defer conn.Close()
 	// 2。准备通过 conn 发送给消息
 	var mes message.Message
-	mes.Type = message.RegisterMesType
+	//mes.Type = message.RegisterMesType
 
 	var registerMes message.RegisterMes
 	registerMes.User.UserId = userId
@@ -193,7 +193,7 @@ func (this *UserProcess) Register(userId int, userPwd, userName string) (err err
 		return
 	}
 
-	var registerResMes message.RegisterResMes
+	var registerResMes *message.RegisterResMes
 	err = json.Unmarshal([]byte(mes.Data), &registerMes)
 	if err != nil {
 		fmt.Println("client login loginResMes Unmarshal err~~~", err)
@@ -204,8 +204,7 @@ func (this *UserProcess) Register(userId int, userPwd, userName string) (err err
 		os.Exit(0)
 	} else {
 		fmt.Println(registerResMes.Error)
-		os.Exit(0)
-
+		//os.Exit(0)
 	}
 	return
 }

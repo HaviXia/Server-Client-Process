@@ -27,7 +27,7 @@ func (this *Transfer) WritePkg(data []byte) (err error) {
 	var pkgLen uint32
 	pkgLen = uint32(len(data))
 	//var buf [4]byte
-	binary.BigEndian.PutUint32(this.Buf[:4], pkgLen) // 把 []byte 转换成 uint32
+	binary.BigEndian.PutUint32(this.Buf[0:4], pkgLen) // 把 []byte 转换成 uint32
 
 	//发送数据长度
 	n, err := this.Conn.Write(this.Buf[:4])

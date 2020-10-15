@@ -133,7 +133,9 @@ func (this *UserProcess) ServerProcessRegister(mes *message.Message) (err error)
 			registerResMes.Error = "注册发生未知错误"
 		}
 	} else {
+		//fmt.Println("用户注册成功")
 		registerResMes.Code = 200
+
 	}
 
 	data, err := json.Marshal(registerResMes)
@@ -154,7 +156,6 @@ func (this *UserProcess) ServerProcessRegister(mes *message.Message) (err error)
 		Conn: this.Conn,
 	}
 	// 连接的方式
-	err = transfer.WritePkg(marData) // 找不到 conn ，需要修改
-
-	return err
+	err = transfer.WritePkg(marData)
+	return
 }

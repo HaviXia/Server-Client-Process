@@ -2,7 +2,7 @@ package main
 
 import (
 	"DailyGolang/sxt17_socket/tcp用户即时通信/common/message"
-	usrProcess "DailyGolang/sxt17_socket/tcp用户即时通信/server/process"
+	process2 "DailyGolang/sxt17_socket/tcp用户即时通信/server/process"
 	"DailyGolang/sxt17_socket/tcp用户即时通信/server/utils"
 	"io"
 
@@ -27,11 +27,11 @@ func (this *Processor) ServerProcessMes(mes *message.Message) (err error) {
 		/*
 			分层之后，需要先创建一个 userProcess 实例，调用其 ServerProcessLogin 的方法
 		*/
-		usrProcess := &usrProcess.UserProcess{Conn: this.Conn}
+		usrProcess := &process2.UserProcess{Conn: this.Conn}
 		err = usrProcess.ServerProcessLogin(mes)
 	case message.RegisterMesType:
 		// 处理注册
-		usrProcess := &usrProcess.UserProcess{Conn: this.Conn}
+		usrProcess := &process2.UserProcess{Conn: this.Conn}
 		err = usrProcess.ServerProcessRegister(mes)
 
 	default:
