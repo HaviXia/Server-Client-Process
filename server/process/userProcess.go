@@ -34,7 +34,7 @@ func (this *UserProcess) ServerProcessLogin(mes *message.Message) (err error) {
 
 	//声明一个 resMes
 	var resMes message.Message
-	resMes.Type = message.LoginResType
+	resMes.Type = message.LoginResMesType
 
 	//声明一个 LoginResMes,完成赋值
 	var loginResMes message.LoginResMes
@@ -57,7 +57,7 @@ func (this *UserProcess) ServerProcessLogin(mes *message.Message) (err error) {
 		} else {
 			// 未知信息
 			loginResMes.Code = 505
-			loginResMes.Error = err.Error()
+			fmt.Println("服务器内部错误。。。 ")
 		}
 	} else {
 		loginResMes.Code = 200
@@ -99,6 +99,57 @@ func (this *UserProcess) ServerProcessLogin(mes *message.Message) (err error) {
 	*/
 	// 使用分层MVC
 
+	transfer := &utils.Transfer{
+		Conn: this.Conn,
+	}
+	// 连接的方式
+	err = transfer.WritePkg(marData) // 找不到 conn ，需要修改
+
+	return err
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~
+func (this *UserProcess) ServerProcessRegister(mes *message.Message) (err error) {
+	var registerMes message.RegisterMes
+	err = json.Unmarshal([]byte(mes.Data), &registerMes)
+	if err != nil {
+		fmt.Println("json Marshal err(),", err)
+		return
+	}
+
+	//声明一个 resMes ,响应给客户端的消息
+	var resMes message.Message
+	resMes.Type = message.RegisterResMesType
+	//声明 registerResMes
+	var registerResMes message.RegisterResMes
+	// redis 完成注册
+	err = model.MyUserDao.Register(&registerMes.User) //两个 user ，要在 Dao 中传入参数是 message.User
+	if err != nil {
+		if err == model.ERROR_USER_EXISTS {
+			registerResMes.Code = 505 //
+			registerResMes.Error = model.ERROR_USER_EXISTS.Error()
+		} else {
+			registerResMes.Code = 501 //
+			registerResMes.Error = "注册发生未知错误"
+		}
+	} else {
+		registerResMes.Code = 200
+	}
+
+	data, err := json.Marshal(registerResMes)
+	if err != nil {
+		fmt.Println("registerResMes序列化错误！", err)
+		return err
+	}
+
+	// 序列化之后，传给resMes
+	resMes.Data = string(data)
+	// 序列化 resMes 发送
+	marData, err := json.Marshal(resMes) // marData 是 []byte，传入到writePkg的参数要是  []byte
+	if err != nil {
+		fmt.Println("resMes序列化错误！", err)
+		return err
+	}
 	transfer := &utils.Transfer{
 		Conn: this.Conn,
 	}

@@ -204,3 +204,10 @@
             3。编写model/userDao.go
 
 
+        实现功能：完成用户注册功能，将注册信息录入到 redis 中，思路：
+                        common/message/message.go 中增加两个消息类型
+                        在客户端接收用户的输入
+                        client/process/userProcess增加 Register() 完成注册
+                        server/model/userDao.go 下增加了 Register()方法
+
+

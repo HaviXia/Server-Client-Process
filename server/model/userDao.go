@@ -1,6 +1,7 @@
 package model
 
 import (
+	"DailyGolang/sxt17_socket/tcp用户即时通信/common/message"
 	"encoding/json"
 	"fmt"
 	"github.com/garyburd/redigo/redis"
@@ -12,6 +13,7 @@ import (
 */
 var (
 	MyUserDao *UserDao
+	users     = "users"
 )
 
 /*
@@ -30,7 +32,7 @@ var (
 
 type UserDao struct {
 	//将链接池作为一个字段给 UserDao ，需要的话自己取
-	pool *redis.Pool //
+	pool *redis.Pool
 }
 
 /*
@@ -50,7 +52,7 @@ func NewUserDao(pool *redis.Pool) (userDao *UserDao) {
 
 			登陆  --  根据用户的 UserId  返回一个 实例 + error
 */
-func (this *UserDao) getUserById(conn redis.Conn, id int) (user *User, err error) { // 想一下，这个为什么是 redis.Conn 而不是 net.Conn ???
+func (this *UserDao) getUserById(conn redis.Conn, id int) (user *message.User, err error) { // 想一下，这个为什么是 redis.Conn 而不是 net.Conn ???
 	// 通过给定的 Id 到 redis 中查询用户
 	res, err := redis.String(conn.Do("HGet", "users", id))
 	if err != nil {
@@ -62,8 +64,8 @@ func (this *UserDao) getUserById(conn redis.Conn, id int) (user *User, err error
 	}
 	// 得到的 res 是一个序列化之后的内容 "{/"/..../"}"
 	// 需要将 res 进行反序列化，得到 User 实例 ，这样才能得到对应的 Id 和 Pwd
-	user = &User{}
-	err = json.Unmarshal([]byte(res), user)
+	//user = &User{}
+	err = json.Unmarshal([]byte(res), &user)
 	if err != nil {
 		fmt.Println("json Unmarshal err:", err)
 		return
@@ -77,7 +79,7 @@ func (this *UserDao) getUserById(conn redis.Conn, id int) (user *User, err error
 
 	如果 UserId 或者 UserPwd 有错，则返回对应的错误信息
 */
-func (this *UserDao) Login(userId int, userPwd string) (user *User, err error) {
+func (this *UserDao) Login(userId int, userPwd string) (user *message.User, err error) {
 	//从 userDao链接池 中取出一个连接
 	conn := this.pool.Get() // 取到连接
 
@@ -95,6 +97,31 @@ func (this *UserDao) Login(userId int, userPwd string) (user *User, err error) {
 	if user.UserPwd != userPwd {
 		//密码不匹配，不正确
 		err = ERROR_USER_PWD
+		return
+	}
+	return
+}
+
+//
+func (this *UserDao) Register(user *message.User) (err error) {
+	conn := this.pool.Get() //拿到连接
+	defer conn.Close()
+	user, err = this.getUserById(conn, user.UserId) //返回值已经定义名称，使用 = 而不是 :=
+	if err == nil {
+		err = ERROR_USER_EXISTS // 如果不出错，则返回用户Id已经存在
+	}
+
+	// 说明这个 redis 中没有存 这个用户的 id 和 pwd ，可以完成注册
+	data, err := json.Marshal(user) // 把这个结构体变成字符串
+	if err != nil {
+		//fmt.Println("userDao Register() Marshal() err,", err)
+		return
+	}
+
+	// 添加到 redis , 得到的 data 是一个 []byte 要转换成 string
+	_, err = redis.String(conn.Do("HSet", users, user.UserId, string(data))) //users 是全局的常量
+	if err != nil {
+		fmt.Println("保存注册用户错误")
 		return
 	}
 	return

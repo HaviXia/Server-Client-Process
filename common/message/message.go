@@ -1,5 +1,12 @@
 package message
 
+const (
+	LoginMesType       = "LoginMes"
+	LoginResMesType    = "LoginResMes"
+	RegisterMesType    = "RegisterMes"
+	RegisterResMesType = "RegisterResMes"
+)
+
 type Message struct {
 	Type string `json:"type"`
 	Data string `json:"data"`
@@ -27,17 +34,21 @@ type LoginResMes struct {
 		Code = 505 未知错误/服务器内部错误
 		Code = 200 表示登陆成功
 	*/
-	Error string `json:"err"` //登陆时返回的错误信息
+	Error string `json:"error"` //登陆时返回的错误信息
 }
 
 //注册对应的结构体
 type RegisterMes struct {
+	User User `json:"user"` // 传入的就是 User 结构体
 }
 
-// 描述消息是什么类型的  LoginMes 和 LoginResMes 两种类型
+// 描述注册消息类型
 
-const (
-	LoginMesType = "LoginMes"
-	LoginResType = "LoginResMes"
-	RegisterType = "RegisterMes"
-)
+type RegisterResMes struct {
+	Code int `json:"code"` //错误的代码
+	/*
+		Code = 400 表示用户Id被占用
+		Code = 200 表示登陆成功
+	*/
+	Error string `json:"error"` //登陆时返回的错误信息
+}

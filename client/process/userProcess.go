@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 )
 
 type UserProcess struct {
@@ -52,7 +53,7 @@ func (this *UserProcess) Login(userId int, userPwd string) (err error) { // 返�
 	mesData, err := json.Marshal(mes)
 	if err != nil {
 		panic(err)
-		fmt.Println("mes序列化错误")
+		fmt.Println("loginM es序列化错误")
 		return
 	}
 
@@ -137,6 +138,74 @@ func (this *UserProcess) Login(userId int, userPwd string) (err error) { // 返�
 		}
 	} else {
 		fmt.Println(loginResMes.Error)
+	}
+	return
+}
+
+func (this *UserProcess) Register(userId int, userPwd, userName string) (err error) {
+	conn, err := net.Dial("tcp", "localhost:8889")
+	if err != nil {
+		fmt.Println("客户端 net.Dial() err,", err)
+		return
+	}
+
+	//延时关闭
+	defer conn.Close()
+	// 2。准备通过 conn 发送给消息
+	var mes message.Message
+	mes.Type = message.RegisterMesType
+
+	var registerMes message.RegisterMes
+	registerMes.User.UserId = userId
+	registerMes.User.UserPwd = userPwd
+	registerMes.User.UserName = userName
+
+	//4 序列化
+	//4。将 registerMes 序列化,之后发送
+	data, err := json.Marshal(registerMes) // marshal是一个切片 []byte
+	if err != nil {
+		fmt.Println("registerMes序列化错误", err)
+		return
+	}
+
+	//赋值,把 []byte 转换成 string
+	mes.Data = string(data)
+
+	// 将 mes 序列化
+	data, err = json.Marshal(mes)
+	if err != nil {
+		fmt.Println("json.Marshal() err:", err)
+		return
+	}
+
+	transfer := &utils.Transfer{
+		Conn: conn,
+	}
+	// 发送 data 给服务器端
+	err = transfer.WritePkg(data)
+	if err != nil {
+		fmt.Println("注册发送信息出错···", err)
+	}
+
+	mes, err = transfer.ReadPkg() // mes 为 RegisterResMes
+	if err != nil {
+		fmt.Println("userProcess/ReadPkg() err:", err)
+		return
+	}
+
+	var registerResMes message.RegisterResMes
+	err = json.Unmarshal([]byte(mes.Data), &registerMes)
+	if err != nil {
+		fmt.Println("client login loginResMes Unmarshal err~~~", err)
+		return
+	}
+	if registerResMes.Code == 200 {
+		fmt.Println("用户注册成功")
+		os.Exit(0)
+	} else {
+		fmt.Println(registerResMes.Error)
+		os.Exit(0)
+
 	}
 	return
 }
